@@ -2,15 +2,16 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
+using Unity.Transforms;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-partial struct GoInGameServerSystem : ISystem {
+partial struct MakeMoveServerSystem : ISystem {
     [BurstCompile]
     public void OnCreate(ref SystemState state) {
         state.RequireForUpdate(new EntityQueryBuilder(Allocator.Temp)
             .WithAll<
-                GoInGameRpcRequest,
+                MakeMoveClientRpc,
                 ReceiveRpcCommandRequest>()
             .Build(state.EntityManager));
     }
@@ -23,18 +24,16 @@ partial struct GoInGameServerSystem : ISystem {
             .CreateCommandBuffer();
 
         foreach (var (
-            goInGameRpcRequest,
-            receiveRpcCommandRequest,
+            makeMoveClientRpc,
+            receiveRpcRequest,
             entity) in SystemAPI.Query<
-                RefRO<GoInGameRpcRequest>,
+                RefRO<MakeMoveClientRpc>,
                 RefRO<ReceiveRpcCommandRequest>>()
                 .WithEntityAccess()) {
-            ecb.AddComponent<NetworkStreamInGame>(receiveRpcCommandRequest.ValueRO.SourceConnection);
+            Debug.Log("Server make move at: " + makeMoveClientRpc.ValueRO.movePos + " | by: " + receiveRpcRequest.ValueRO.SourceConnection);
 
-            Debug.Log("Hello: " 
-                + goInGameRpcRequest.ValueRO.playerName 
-                + " :: " + receiveRpcCommandRequest.ValueRO.SourceConnection
-                + " :: " + entity);
+            Entity markEntity = ecb.Instantiate(SystemAPI.GetSingleton<BoardRefData>().circleMark);
+            ecb.SetComponent(markEntity, LocalTransform.FromPosition(makeMoveClientRpc.ValueRO.worldPos));
 
             ecb.DestroyEntity(entity);
         }

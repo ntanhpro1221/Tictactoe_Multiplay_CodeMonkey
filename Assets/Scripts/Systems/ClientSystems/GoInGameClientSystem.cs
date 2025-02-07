@@ -32,7 +32,7 @@ partial struct GoInGameClientSystem : ISystem {
             Debug.Log("Connected: " + entity + " :: " + networkId.ValueRO.Value);
 
             Entity rpcEntity = ecb.CreateEntity();
-            ecb.AddComponent(rpcEntity, new GoInGameRpcRequest() {
+            ecb.AddComponent(rpcEntity, new GoInGameClientRpc() {
                 playerName = new("Alice"),
             });
             ecb.AddComponent<SendRpcCommandRequest>(rpcEntity);
