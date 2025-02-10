@@ -1,4 +1,5 @@
 using System;
+using SingletonUtil;
 
 public class EventOOPHandler : SceneSingleton<EventOOPHandler> {
     private static PropertySet<EventType, Action> eventBoard = new();
